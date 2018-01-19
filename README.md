@@ -1,6 +1,6 @@
 # imusim
 imu和cam数据仿真,用于vio算法测试
-
+![demo](https://github.com/HeYijia/vio_data_simulation/tree/master/bin/demo.png)
 ## 坐标系
 **B**ody frame: imu坐标系
 

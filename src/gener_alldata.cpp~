@@ -1,0 +1,307 @@
+//
+// Created by hyj on 17-6-22.
+//
+
+#include <eigen3/Eigen/Core>
+#include <iostream>
+#include <vector>
+
+#include "camera_model.h"
+#include "param.h"
+
+#include <fstream>
+
+
+struct MotionData
+{
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    double timestamp;
+    Eigen::Matrix3d Rwb;
+    Eigen::Vector3d twb;
+    Eigen::Vector3d imu_acc;
+    Eigen::Vector3d imu_gyro;
+};
+
+void save_points(std::string filename, std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points)
+{
+    std::ofstream save_points;
+    save_points.open(filename.c_str());
+
+    for (int i = 0; i < points.size(); ++i) {
+        Eigen::Vector4d p = points[i];
+
+        save_points<<p(0)<<" "
+                   <<p(1)<<" "
+                   <<p(2)<<" "
+                   <<p(3)<<std::endl;
+    }
+}
+void save_features(std::string filename,
+                   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points,
+                   std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > features)
+{
+    std::ofstream save_points;
+    save_points.open(filename.c_str());
+
+    for (int i = 0; i < points.size(); ++i) {
+        Eigen::Vector4d p = points[i];
+        Eigen::Vector2d f = features[i];
+        save_points<<p(0)<<" "
+                   <<p(1)<<" "
+                   <<p(2)<<" "
+                   <<p(3)<<" "
+                   <<f(0)<<" "
+                   <<f(1)<<" "
+                   <<std::endl;
+    }
+}
+
+void save_Pose(std::string filename, std::vector<MotionData> pose)
+{
+    std::ofstream save_points;
+    save_points.open(filename.c_str());
+
+    for (int i = 0; i < pose.size(); ++i) {
+        MotionData data = pose[i];
+        double time = data.timestamp;
+        Eigen::Quaterniond q(data.Rwb);
+        Eigen::Vector3d t = data.twb;
+        Eigen::Vector3d gyro = data.imu_gyro;
+        Eigen::Vector3d acc = data.imu_acc;
+
+        save_points<<time<<" "
+                <<q.w()<<" "
+                   <<q.x()<<" "
+                   <<q.y()<<" "
+                   <<q.z()<<" "
+                   <<t(0)<<" "
+                   <<t(1)<<" "
+                   <<t(2)<<" "
+                <<gyro(0)<<" "
+                <<gyro(1)<<" "
+                <<gyro(2)<<" "
+                <<acc(0)<<" "
+                <<acc(1)<<" "
+                <<acc(2)<<" "
+                   <<std::endl;
+    }
+}
+
+// euler2Rotation:   body frame to interitail frame
+Eigen::Matrix3d euler2Rotation( Eigen::Vector3d  eulerAngles)
+{
+    double roll = eulerAngles(0);
+    double pitch = eulerAngles(1);
+    double yaw = eulerAngles(2);
+
+    double cr = cos(roll); double sr = sin(roll);
+    double cp = cos(pitch); double sp = sin(pitch);
+    double cy = cos(yaw); double sy = sin(yaw);
+
+    Eigen::Matrix3d RIb;
+    RIb<< cy*cp ,   cy*sp*sr - sy*cr,   sy*sr + cy* cr*sp,
+          sy*cp,    cy *cr + sy*sr*sp,  sp*sy*cr - cy*sr,
+          -sp,         cp*sr,           cp*cr;
+    return RIb;
+}
+
+Eigen::Matrix3d eulerRates2bodyRates(Eigen::Vector3d eulerAngles)
+{
+    double roll = eulerAngles(0);
+    double pitch = eulerAngles(1);
+
+    double cr = cos(roll); double sr = sin(roll);
+    double cp = cos(pitch); double sp = sin(pitch);
+
+    Eigen::Matrix3d R;
+    R<<  1,   0,    -sp,
+         0,   cr,   sr*cp,
+         0,   -sr,  cr*cp;
+
+    return R;
+}
+
+
+void CreateCubePoints(std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> >& points)
+{
+
+    double d = 10.0;               //正方体边长2d
+    int n = 20;
+    double grid_size = 2*d/n;      // 等分成10行10列的小格子
+    //正方体四周围墙上等距分布着points
+    double cube_d[2] = {d,-d};
+    int feature_id = 0;
+
+    for (int k = 0; k < 2; ++k) {
+        double y = cube_d[k];               // 正方体某一面
+        for (int i = 0; i < n; ++i)         // 遍历x坐标
+        {
+            double x = -d + i * grid_size;
+            for (int j = 0; j < n; ++j) {   // 遍历z坐标
+
+                double z = -d + j * grid_size;
+
+                feature_id++;
+                Eigen::Vector4d point(x,y,z,feature_id);//　最后一位存着feature_id
+                points.push_back(point);
+
+                feature_id++;
+                Eigen::Vector4d point1(y,x,z,feature_id);
+                points.push_back(point1);
+
+
+            }
+        }
+    }
+
+    // save points
+    std::stringstream filename;
+    filename<<"all_points.txt";
+    save_points(filename.str(),points);
+}
+
+
+MotionData MotionModel(double t)
+{
+    MotionData data;
+
+    float circle_r = 3;
+    float z = 1;           // z轴做sin运动
+    float K1 = 2;          // z轴的正弦频率是x，y的k1倍
+    float K = M_PI/ 10;    //  20 * K = 2pi 　　由于我们采取的是时间是20s, 系数K控制 运动一周
+
+    // twb:  body frame in world frame
+    Eigen::Vector3d position( circle_r * cos( K * t), circle_r * sin( K * t),  z * sin( K1 * K * t ) - 5);
+
+    Eigen::Vector3d dp(- K * circle_r * sin(K*t),  K * circle_r * cos(K*t), z*K1*K * cos(K1 * K * t));              // position导数　in world frame
+    double K2 = K*K;
+    Eigen::Vector3d ddp( -K2 * circle_r * cos(K*t),  -K2 * circle_r * sin(K*t), -z*K1*K1*K2 * sin(K1 * K * t));     // position二阶导数
+
+    Eigen::Vector3d eulerAngles(0, 0, K*t );       // 0, M_PI_2, K*t
+    Eigen::Vector3d eulerAnglesRates(0,0, K);      // euler angles 的导数
+
+    Eigen::Matrix3d Rwb = euler2Rotation(eulerAngles);      // body frame to world frame
+    Eigen::Vector3d imu_gyro = eulerRates2bodyRates(eulerAngles) * eulerAnglesRates;   //  euler rates trans to body gyro
+
+    Eigen::Matrix3d Rwn = euler2Rotation(Eigen::Vector3d(0,0,0));     //  Navigation frame to world frame
+    Eigen::Vector3d gn (0,0,-9.81);                                   //  gravity in navigation frame(ENU)   ENU (0,0,-9.81)  NED(0,0,9,81)
+    Eigen::Vector3d imu_acc = Rwb.transpose() * ( ddp -  Rwn * gn );  //  Rbw * Rwn * gn = gs
+
+    data.imu_gyro = imu_gyro;
+    data.imu_acc = imu_acc;
+    data.Rwb = Rwb;
+    data.twb = position;
+    data.timestamp = t;
+    return data;
+}
+
+// circle motion : used to debug
+/*
+MotionData MotionModel(double t)
+{
+    MotionData data;
+
+    float circle_r = 3;
+    float z = 1;           // z轴做sin运动
+    float K1 = 2;          // z轴的正弦频率是x，y的k1倍
+    float K = M_PI/ 10;    //  20 * K = 2pi 　　由于我们采取的是时间是20s, 系数K控制 运动一周
+
+    // twb:  body frame in world frame
+    Eigen::Vector3d position( circle_r * cos( K * t), circle_r * sin( K * t),  0);
+
+    Eigen::Vector3d dp(- K * circle_r * sin(K*t),  K * circle_r * cos(K*t), 0);              // position导数　in world frame
+    double K2 = K*K;
+    Eigen::Vector3d ddp( -K2 * circle_r * cos(K*t),  -K2 * circle_r * sin(K*t), 0);     // position二阶导数
+
+    Eigen::Vector3d eulerAngles(0, 0, K*t );       // 0, M_PI_2, K*t
+    Eigen::Vector3d eulerAnglesRates(0,0, K);      // euler angles 的导数
+
+    Eigen::Matrix3d Rwb = euler2Rotation(eulerAngles);      // body frame to world frame
+    Eigen::Vector3d imu_gyro = eulerRates2bodyRates(eulerAngles) * eulerAnglesRates;   //  euler rates trans to body gyro
+
+    Eigen::Matrix3d Rwn = euler2Rotation(Eigen::Vector3d(0,0,0));     //  Navigation frame to world frame
+    Eigen::Vector3d gn (0,0,-9.81);                                   //  gravity in navigation frame(ENU)   ENU (0,0,-9.81)  NED(0,0,9,81)
+    Eigen::Vector3d imu_acc = Rwb.transpose() * ( ddp -  Rwn * gn );  //  Rbw * Rwn * gn = gs
+
+    data.imu_gyro = imu_gyro;
+    data.imu_acc = imu_acc; //  imu_acc
+    data.Rwb = Rwb;
+    data.twb = position;
+    data.timestamp = t;
+    return data;
+}
+*/
+
+int main(){
+
+    // 生成3d points
+    std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points;
+    CreateCubePoints(points);
+
+    Param params;
+    // create pinhole model
+    Camera_Model::PinholeCamera* pinhole;
+    pinhole = new Camera_Model::PinholeCamera(params.image_w,params.image_h,params.fx,params.fy, params.cx, params.cy);
+
+    // imu pose gyro acc
+    std::vector< MotionData > imudata;
+    for (float t = params.t_start; t<params.t_end;) {
+        MotionData data = MotionModel(t);
+
+        imudata.push_back(data);
+        t += 1.0/params.imu_frequency;
+    }
+    save_Pose("imu_pose.txt",imudata);
+
+    // cam pose
+    std::vector< MotionData > camdata;
+    for (float t = params.t_start; t<params.t_end;) {
+
+        MotionData imu = MotionModel(t);   // imu body frame to world frame motion
+        MotionData cam;
+        Eigen::Matrix3d Rbc = euler2Rotation(params.rpy_bc);
+        cam.timestamp = imu.timestamp;
+        cam.Rwb = imu.Rwb * Rbc;    // cam frame in world frame
+        cam.twb = imu.twb + imu.Rwb * params.t_bc; //  Tcw = Twb * Tbc ,  t = Rwb * tbc + twb
+
+        camdata.push_back(cam);
+        t += 1.0/params.cam_frequency;
+    }
+    save_Pose("cam_pose.txt",camdata);
+
+
+    // points in image
+    for(int n = 0; n < camdata.size(); ++n)
+    {
+        MotionData data = camdata[n];
+        Eigen::Matrix4d Twc = Eigen::Matrix4d::Identity();
+        Twc.block(0, 0, 3, 3) = data.Rwb;
+        Twc.block(0, 3, 3, 1) = data.twb;
+
+        // 遍历所有的特征点，看哪些特征点在视野里
+        std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points_cam;    // ３维点在当前cam视野里
+        std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > features_cam;  // 对应的２维图像坐标
+        for (int i = 0; i < points.size(); ++i) {
+            Eigen::Vector4d pw = points[i];          // 最后一位存着feature id
+            pw[3] = 1;                               //改成齐次坐标最后一位
+            Eigen::Vector4d pc1 = Twc.inverse() * pw; // T_wc.inverse() * Pw  -- > point in cam frame
+
+            if(pc1(2) < 0) continue; // z必须大于０,在摄像机坐标系前方
+
+            Eigen::Vector2d obs = pinhole->world2cam(Eigen::Vector3d(pc1(0), pc1(1), pc1(2)) );
+            if(obs(0) < params.image_h && obs(0) > 0 && obs(1)> 0 && obs(1) < params.image_w)
+            {
+                points_cam.push_back(points[i]);
+                features_cam.push_back(obs);
+            }
+        }
+
+        // save points
+        std::stringstream filename1;
+        filename1<<"keyframe/all_points_"<<n<<".txt";
+        save_features(filename1.str(),points_cam,features_cam);
+    }
+
+
+    return 1;
+}

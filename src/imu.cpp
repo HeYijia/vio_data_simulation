@@ -48,7 +48,8 @@ IMU::IMU(Param p): param_(p)
 
 void IMU::addIMUnoise(MotionData& data)
 {
-    std::default_random_engine generator_;
+    std::random_device rd;
+    std::default_random_engine generator_(rd());
     std::normal_distribution<double> noise(0.0, 1.0);
 
     Eigen::Vector3d noise_gyro(noise(generator_),noise(generator_),noise(generator_));

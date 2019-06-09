@@ -79,6 +79,23 @@ CreatePointsLines(std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::V
 
 int main(){
 
+//    Eigen::Quaterniond Qwb;
+//    Qwb.setIdentity();
+//    Eigen::Vector3d omega (0,0,M_PI/10);
+//    double dt_tmp = 0.005;
+//    for (double i = 0; i < 20.; i += dt_tmp) {
+//        Eigen::Quaterniond dq;
+//        Eigen::Vector3d dtheta_half =  omega * dt_tmp /2.0;
+//        dq.w() = 1;
+//        dq.x() = dtheta_half.x();
+//        dq.y() = dtheta_half.y();
+//        dq.z() = dtheta_half.z();
+//
+//        Qwb = Qwb * dq;
+//    }
+//
+//    std::cout << Qwb.coeffs().transpose() <<"\n"<<Qwb.toRotationMatrix() << std::endl;
+
     // 生成3d points
     std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points;
     std::vector < std::pair< Eigen::Vector4d, Eigen::Vector4d > > lines;

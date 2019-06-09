@@ -12,13 +12,16 @@ from mpl_toolkits.mplot3d import Axes3D
 from GeometryLib import  drawCoordinateFrame, euler2Rbn,euler2Rnb
 import transformations as tf
 
+import os
+#filepath=os.path.abspath('.')  #表示当前所处的文件夹的绝对路径
+filepath=os.path.abspath('..')+"/bin"  #表示当前所处的文件夹上一级文件夹的绝对路径
 
 point_id=[]
 x=[]
 y=[]
 z=[]                                                                                                
 
-with open('/home/hyj/my_slam/vio_sim/vio_pl_sim/bin/all_points.txt', 'r') as f:
+with open(filepath + '/all_points.txt', 'r') as f:
     data = f.readlines()  #txt中所有字符串读入data  
   
     for line in data:  
@@ -33,7 +36,7 @@ position = []
 quaterntions = []
 timestamp = []
 qw_index = 1
-with open('/home/hyj/my_slam/vio_sim/vio_pl_sim/bin/cam_pose.txt', 'r') as f:   #   imu_circle   imu_spline
+with open(filepath + '/cam_pose.txt', 'r') as f:   #   imu_circle   imu_spline
 
     data = f.readlines()  #txt中所有字符串读入data    
     for line in data:  
@@ -68,7 +71,7 @@ for i in range(0,400,5):
     for j in range(len(rpy)):
         drawCoordinateFrame(ax, rpy[j], t[j])    
     
-    s = '/home/hyj/my_slam/vio_sim/vio_pl_sim/bin/keyframe/all_points_' +str(i)+'.txt'
+    s = filepath + '/keyframe/all_points_' +str(i)+'.txt'
     with open(s, 'r') as f:   
         data = f.readlines()  #txt中所有字符串读入data  
         for line in data:  
@@ -80,7 +83,7 @@ for i in range(0,400,5):
             
             ax.plot( [ numbers_float[0],   p[0]  ] , [ numbers_float[1], p[1] ] , zs=[ numbers_float[2], p[2] ] )
 
-    s = '/home/hyj/my_slam/vio_sim/vio_pl_sim/bin/house.txt'
+    s = filepath + '/house_model/house.txt'
     with open(s, 'r') as f:
         data = f.readlines()  # txt中所有字符串读入data
         for line in data:

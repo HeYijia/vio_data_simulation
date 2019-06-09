@@ -17,11 +17,15 @@ import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+import os
+filepath=os.path.abspath('..')+"/bin"  #表示当前所处的文件夹上一级文件夹的绝对路径
+
 position = []
 quaterntions = []
 timestamp = []
 tx_index = 5
-with open('/home/hyj/my_slam/vio_sim/vio_pl_sim/bin/imu_pose.txt', 'r') as f:  # imu_circle   imu_spline
+
+with open(filepath + '/imu_pose.txt', 'r') as f:  # imu_circle   imu_spline
 
     data = f.readlines()  # txt中所有字符串读入data
     for line in data:
@@ -33,7 +37,7 @@ with open('/home/hyj/my_slam/vio_sim/vio_pl_sim/bin/imu_pose.txt', 'r') as f:  #
 position1 = []
 quaterntions1 = []
 timestamp1 = []
-with open('/home/hyj/my_slam/vio_sim/vio_pl_sim/bin/imu_int_pose.txt', 'r') as f:  # imu_pose   imu_spline
+with open(filepath + '/imu_int_pose.txt', 'r') as f:  # imu_pose   imu_spline
 
     data = f.readlines()  # txt中所有字符串读入data
     for line in data:
@@ -47,7 +51,7 @@ with open('/home/hyj/my_slam/vio_sim/vio_pl_sim/bin/imu_int_pose.txt', 'r') as f
 position2 = []
 quaterntions2 = []
 timestamp2 = []
-with open('/home/hyj/my_slam/vio_sim/vio_pl_sim/bin/imu_int_pose_noise.txt', 'r') as f:  # cam_pose_opt_o_0   cam_pose_opt_o_0
+with open(filepath + '/imu_int_pose_noise.txt', 'r') as f:  # cam_pose_opt_o_0   cam_pose_opt_o_0
 
     data = f.readlines()  # txt中所有字符串读入data
     for line in data:

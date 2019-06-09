@@ -18,7 +18,7 @@ public:
     int cam_frequency = 30;
     double imu_timestep = 1./imu_frequency;
     double cam_timestep = 1./cam_frequency;
-    double t_start = 0;
+    double t_start = 0.;
     double t_end = 20;  //  20 s
 
     // noise

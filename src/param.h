@@ -18,12 +18,15 @@ public:
     int cam_frequency = 30;
     double imu_timestep = 1./imu_frequency;
     double cam_timestep = 1./cam_frequency;
-    double t_start = 0.;
-    double t_end = 20;  //  20 s
+    double t_start = 0;
+    double t_end = 3600 * 4;  //  
 
     // noise
-    double gyro_bias_sigma = 1.0e-5;
-    double acc_bias_sigma = 0.0001;
+    double gyro_bias_sigma = 0.00005;
+    double acc_bias_sigma = 0.0005;
+
+    //double gyro_bias_sigma = 1.0e-5;
+    //double acc_bias_sigma = 0.0001;
 
     double gyro_noise_sigma = 0.015;    // rad/s
     double acc_noise_sigma = 0.019;      //　m/(s^2)

@@ -45,7 +45,6 @@ public:
     Eigen::Matrix3d init_Rwb_;
 
     MotionData MotionModel(double t);
-
     void addIMUnoise(MotionData& data);
     void testImu(std::string src, std::string dist);        // imu数据进行积分，用来看imu轨迹
 

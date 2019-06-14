@@ -11,7 +11,7 @@ we also create a ros_version in ros_version branch.
 
 **W**orld　frame: imu坐标系的第一帧位置
 
-**N**avigation frame: NED(东北天) or　ENU（北东地）,本代码采用的是ENU,重力向量在该坐标系下为$(0,0,-9.81)$
+**N**avigation frame: NED(北东地) or　ENU（东北天）,本代码采用的是ENU,重力向量在该坐标系下为$(0,0,-9.81)$
 
 目前，imu的z轴向上，xy平面内做椭圆运动，z轴做正弦运动，x轴沿着圆周向外。外参数Tbc将相机坐标旋转，使得相机朝向特征点。
 

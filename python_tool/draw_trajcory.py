@@ -72,7 +72,7 @@ xyz2 = zip(*position2)
 print
 ax.plot(xyz[0], xyz[1], xyz[2], label='gt')
 ax.plot(xyz1[0], xyz1[1], xyz1[2], label='imu_int')
-# ax.plot(xyz2[0], xyz2[1], xyz2[2], label='noise')
+ax.plot(xyz2[0], xyz2[1], xyz2[2], label='noise')
 ax.legend()
 
 ax.set_xlabel('X')

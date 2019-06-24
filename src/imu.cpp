@@ -135,7 +135,7 @@ void IMU::testImu(std::string src, std::string dist)
     for (int i = 1; i < imudata.size(); ++i) {
 
         MotionData imupose = imudata[i];
-        MotionData imupose_next_k = imudata[i+1];
+//        MotionData imupose_next_k = imudata[i+1];
 
         //delta_q = [1 , 1/2 * thetax , 1/2 * theta_y, 1/2 * theta_z]
         Eigen::Quaterniond dq;
@@ -206,12 +206,12 @@ void IMU::testImuMidPoint(std::string src, std::string dist)
     for (int i = 1; i < imudata.size(); ++i) {
 
         MotionData imupose = imudata[i];
-        MotionData imupose_next_k = imudata[i+1];
+        MotionData imupose_last_k = imudata[i-1];
 
         //delta_q = [1 , 1/2 * thetax , 1/2 * theta_y, 1/2 * theta_z]
         Eigen::Quaterniond dq;
 //        Eigen::Vector3d dtheta_half =  imupose.imu_gyro * dt /2.0; //euler integrate
-        Eigen::Vector3d dtheta_half =  (imupose.imu_gyro + imupose_next_k.imu_gyro)/2 * dt /2.0; //mid-point integrate
+        Eigen::Vector3d dtheta_half =  (imupose.imu_gyro + imupose_last_k.imu_gyro)/2 * dt /2.0; //mid-point integrate
 
 
         dq.w() = 1;
@@ -219,6 +219,7 @@ void IMU::testImuMidPoint(std::string src, std::string dist)
         dq.y() = dtheta_half.y();
         dq.z() = dtheta_half.z();
 
+        dq.normalize();
         /// imu 动力学模型 欧拉积分
 //        Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gw;  // aw = Rwb * ( acc_body - acc_bias ) + gw
 //        Qwb = Qwb * dq;
@@ -228,8 +229,8 @@ void IMU::testImuMidPoint(std::string src, std::string dist)
         /// 中值积分
         Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gw;  // aw = Rwb * ( acc_body - acc_bias ) + gw
         Qwb = Qwb * dq;
-        Eigen::Vector3d acc_w_next_k = Qwb * (imupose_next_k.imu_acc) + gw;
-        Eigen::Vector3d acc_w_mid_point = (acc_w + acc_w_next_k)/2;
+        Eigen::Vector3d acc_w_last_k = Qwb * (imupose_last_k.imu_acc) + gw;
+        Eigen::Vector3d acc_w_mid_point = (acc_w + acc_w_last_k)/2;
         Pwb = Pwb + Vw * dt + 0.5 * dt * dt * acc_w_mid_point;
         Vw = Vw + acc_w_mid_point * dt;
 

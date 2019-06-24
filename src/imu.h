@@ -48,6 +48,7 @@ public:
 
     void addIMUnoise(MotionData& data);
     void testImu(std::string src, std::string dist);        // imu数据进行积分，用来看imu轨迹
+    void testImuMidPoint(std::string src, std::string dist); // imu数据进行中值积分，用来看imu轨迹
 
 };
 

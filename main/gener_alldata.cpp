@@ -128,6 +128,7 @@ int main(){
 
     imuGen.testImu("imu_pose.txt", "imu_int_pose.txt");     // test the imu data, integrate the imu data to generate the imu trajecotry
     imuGen.testImu("imu_pose_noise.txt", "imu_int_pose_noise.txt");
+    imuGen.testImuMidPoint("imu_pose_noise.txt", "imu_int_pose_noise_midpoint.txt");
 
     // cam pose
     std::vector< MotionData > camdata;

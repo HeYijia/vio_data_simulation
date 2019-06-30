@@ -227,9 +227,9 @@ void IMU::testImuMidPoint(std::string src, std::string dist)
 //        Pwb = Pwb + Vw * dt + 0.5 * dt * dt * acc_w;
 
         /// 中值积分
-        Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gw;  // aw = Rwb * ( acc_body - acc_bias ) + gw
-        Qwb = Qwb * dq;
         Eigen::Vector3d acc_w_last_k = Qwb * (imupose_last_k.imu_acc) + gw;
+        Qwb = Qwb * dq;
+        Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gw;  // aw = Rwb * ( acc_body - acc_bias ) + gw
         Eigen::Vector3d acc_w_mid_point = (acc_w + acc_w_last_k)/2;
         Pwb = Pwb + Vw * dt + 0.5 * dt * dt * acc_w_mid_point;
         Vw = Vw + acc_w_mid_point * dt;

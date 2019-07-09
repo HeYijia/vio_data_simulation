@@ -96,6 +96,8 @@ int main(){
 //
 //    std::cout << Qwb.coeffs().transpose() <<"\n"<<Qwb.toRotationMatrix() << std::endl;
 
+    //建立keyframe文件夹
+    system("mkdir keyframe");
     // 生成3d points
     std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points;
     std::vector < std::pair< Eigen::Vector4d, Eigen::Vector4d > > lines;

@@ -2,6 +2,7 @@
 // Created by hyj on 18-1-19.
 //
 
+#include <random>
 #include "imu.h"
 #include "utilities.h"
 

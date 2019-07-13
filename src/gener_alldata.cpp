@@ -9,46 +9,40 @@
 
 int main(int argc, char** argv)
 {
-    // IMU model
- 
-    Param params;
-    IMU imuGen(params);
-
+    const std::string home_path = getenv("HOME");
+    const std::string bag_path = home_path + "/imu.bag";
     rosbag::Bag bag;
-    bag.open("/home/hyj/all_ros_ws/vio_sim_data_ws/src/data/imu.bag", rosbag::bagmode::Write);
+    bag.open(bag_path, rosbag::bagmode::Write);
 
     ros::Time::init();
     double begin =ros::Time::now().toSec();
-    std::cout << " start generate data, please waiting..."<<std::endl;
+    std::cout << "Start generate data, please waiting..."<<std::endl;
 
-    char bar[102]={0};
+    // IMU model
+    Param params;
+    IMU imuGen(params);
+
     const char symbol[4] = {'|','/','-','\\'};
+    for (double t = params.t_start; t < params.t_end;) {
+        if((int)t % params.imu_frequency == 0)
+        {
+            int i = (int)( (t - params.t_start) / (params.t_end - params.t_start) * 100);
+            printf("[#][%d%%][%c]\r", i, symbol[i%4]);
+            fflush(stdout);
+        }
 	
-    for (double t = params.t_start; t<params.t_end;) {
-
-	if( (int)t % params.imu_frequency == 0)
-	{
-	    int i = (int)( (t - params.t_start) / (params.t_end - params.t_start) * 100);
-	    bar[i] = '#';
-	    printf("[%s][%d%%][%c]\r", bar, i, symbol[i%4]);
-	    fflush(stdout);
-	}	
-	
-        sensor_msgs::Imu imu_data;
-        
-        ros::Time time_now(begin+t);
-
-        imu_data.header.stamp = time_now;
-        imu_data.header.frame_id = "base_link";
-
         // create imu data && add imu noise
         MotionData data = imuGen.MotionModel(0);
         MotionData data_noise = data;
         imuGen.addIMUnoise(data_noise);
-        // to qua
+        // to Quaterniond
         Eigen::Quaterniond q(data_noise.Rwb);
 
-
+        // to ros msg
+        ros::Time time_now(begin + t);
+        sensor_msgs::Imu imu_data;
+        imu_data.header.stamp = time_now;
+        imu_data.header.frame_id = "base_link";
         //四元数位姿
         imu_data.orientation.x = q.x();
         imu_data.orientation.y = q.y();
@@ -67,10 +61,10 @@ int main(int argc, char** argv)
 
         t += 1.0/params.imu_frequency;
     }
+    fflush(stdout);
 
     bag.close();
-    std::cout << " END "<<std::endl;
-
+    std::cout << "Done, save to " << bag_path <<std::endl;
 
 /*    
     ros::init(argc, argv, "imu");     
@@ -119,5 +113,3 @@ int main(int argc, char** argv)
 */
     return 0;
 }
-
-

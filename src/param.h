@@ -19,7 +19,7 @@ public:
     double imu_timestep = 1./imu_frequency;
     double cam_timestep = 1./cam_frequency;
     double t_start = 0;
-    double t_end = 3600 * 4;  //  
+    double t_end = 3600 * 4;  // 4 hours for allan
 
     // noise
     double gyro_bias_sigma = 0.00005;

@@ -20,9 +20,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME}_node src/gener_alldata.cpp src/param.h src/param.cpp src/utilities.h src/utilities.cpp src/imu.h src/imu.cpp)
+add_executable(${PROJECT_NAME}_node
+    src/gener_alldata.cpp src/param.cpp src/utilities.cpp src/imu.cpp)
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
- )
+)
 
-
+add_executable(${PROJECT_NAME}_node_txt
+    src/gener_alldata_txt.cpp src/param.cpp src/utilities.cpp src/imu.cpp)

@@ -147,7 +147,7 @@ int main(){
     }
     save_Pose("cam_pose.txt",camdata);
     save_Pose_asTUM("cam_pose_tum.txt",camdata);
-
+    int last_feature_num;
     // points obs in image
     for(int n = 0; n < camdata.size(); ++n)
     {
@@ -174,11 +174,17 @@ int main(){
                 features_cam.push_back(obs);
             }
         }
-
+        if(n == 0)
+            last_feature_num = features_cam.size();
+        else {
+            assert(last_feature_num == features_cam.size());
+            last_feature_num = features_cam.size();
+        }
         // save points
         std::stringstream filename1;
         filename1<<"keyframe/all_points_"<<n<<".txt";
-        save_features(filename1.str(),points_cam,features_cam);
+        save_features(filename1.str(),points_cam,features_cam, camdata[n].timestamp);
+//        save_features(filename1.str(),points_cam,features_cam);
     }
 
     // lines obs in image
@@ -215,5 +221,5 @@ int main(){
     }
 
 
-    return 1;
+    return 0;
 }

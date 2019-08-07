@@ -19,6 +19,10 @@ void save_points(std::string filename, std::vector<Eigen::Vector4d, Eigen::align
 void save_features(std::string filename,
                    std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points,
                    std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > features);
+void save_features(std::string filename,
+                   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points,
+                   std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > features,
+                   double time);
 
 // save line obs
 void save_lines(std::string filename,

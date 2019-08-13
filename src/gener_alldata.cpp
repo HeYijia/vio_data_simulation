@@ -57,7 +57,7 @@ int main(int argc, char** argv)
         imu_data.angular_velocity.y = data_noise.imu_gyro(1); 
         imu_data.angular_velocity.z = data_noise.imu_gyro(2);
 
-        bag.write("imu", time_now, imu_data);
+        bag.write("\imu", time_now, imu_data);
 
         t += 1.0/params.imu_frequency;
     }

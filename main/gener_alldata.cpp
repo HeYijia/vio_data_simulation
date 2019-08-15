@@ -133,6 +133,7 @@ int main(){
 
     // cam pose
     std::vector< MotionData > camdata;
+    std::vector< MotionData > imudata_correspond_cam;
     for (float t = params.t_start; t<params.t_end;) {
 
         MotionData imu = imuGen.MotionModel(t);   // imu body frame to world frame motion
@@ -141,12 +142,13 @@ int main(){
         cam.timestamp = imu.timestamp;
         cam.Rwb = imu.Rwb * params.R_bc;    // cam frame in world frame
         cam.twb = imu.twb + imu.Rwb * params.t_bc; //  Tcw = Twb * Tbc ,  t = Rwb * tbc + twb
-
+        imudata_correspond_cam.push_back(imu);
         camdata.push_back(cam);
         t += 1.0/params.cam_frequency;
     }
     save_Pose("cam_pose.txt",camdata);
     save_Pose_asTUM("cam_pose_tum.txt",camdata);
+    save_Pose_asTUM("imu_pose_tum_correspondence_cam.txt",imudata_correspond_cam);
     int last_feature_num;
     // points obs in image
     for(int n = 0; n < camdata.size(); ++n)

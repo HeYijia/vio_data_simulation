@@ -18,16 +18,32 @@ FIND_PACKAGE(OpenCV REQUIRED)
 FIND_PACKAGE(Sophus REQUIRED)
 
 include_directories(
+${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${SOPHUS_INCLUDE_DIR} # for both sophus and geographiclib
 ${OPENCV_INCLUDE_DIR}
+
 )
 
 LIST(APPEND LINK_LIBS
 ${OpenCV_LIBS}
 ${Sophus_LIBRARIES}
 )
+add_library(camera_model SHARED
+        src/camera_models/chessboard/Chessboard.cc
+        src/camera_models/calib/CameraCalibration.cc
+        src/camera_models/camera_models/Camera.cc
+        src/camera_models/camera_models/CameraFactory.cc
+        src/camera_models/camera_models/CostFunctionFactory.cc
+        src/camera_models/camera_models/PinholeCamera.cc
+        src/camera_models/camera_models/CataCamera.cc
+        src/camera_models/camera_models/EquidistantCamera.cc
+        src/camera_models/camera_models/ScaramuzzaCamera.cc
+        src/camera_models/sparse_graph/Transform.cc
+        src/camera_models/gpl/gpl.cc
+        src/camera_models/gpl/EigenQuaternionParameterization.cc)
 
+target_link_libraries(camera_model ${Boost_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES})
 ADD_EXECUTABLE(data_gen main/gener_alldata.cpp src/param.h src/param.cpp src/utilities.h src/utilities.cpp src/imu.h src/imu.cpp)
-TARGET_LINK_LIBRARIES (data_gen ${LINK_LIBS})
+TARGET_LINK_LIBRARIES (data_gen ${LINK_LIBS}　camera_model)
 

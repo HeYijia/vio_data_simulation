@@ -6,8 +6,8 @@
 
 #include "../src/imu.h"
 #include "../src/utilities.h"
-
-
+#include "camodocal/camera_models/CameraFactory.h"
+std::string config_file = "config/sim_config.yaml";
 std::vector < std::pair< Eigen::Vector4d, Eigen::Vector4d > >
 CreatePointsLines(std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> >& points)
 {
@@ -104,7 +104,7 @@ int main(){
     // IMU model
     Param params;
     IMU imuGen(params);
-
+    auto m_camera = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(config_file);
     // create imu data
     // imu pose gyro acc
     std::vector< MotionData > imudata;

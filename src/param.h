@@ -28,7 +28,7 @@ public:
     double gyro_noise_sigma = 0.015;    // rad/s
     double acc_noise_sigma = 0.019;      //　m/(s^2)
 
-    double pixel_noise = 1;              // 1 pixel noise
+    double pixel_noise = 1.5;              // 1 pixel noise
 
     // cam f
     double fx = 460;
@@ -37,7 +37,6 @@ public:
     double cy = 255;
     double image_w = 640;
     double image_h = 640;
-
 
     // 外参数
     Eigen::Matrix3d R_bc;   // cam to body

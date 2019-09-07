@@ -16,13 +16,16 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_modules/
 find_package(Eigen3 REQUIRED)
 FIND_PACKAGE(OpenCV REQUIRED)
 FIND_PACKAGE(Sophus REQUIRED)
+find_package(Ceres REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem program_options system)
 
 include_directories(
 ${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${SOPHUS_INCLUDE_DIR} # for both sophus and geographiclib
 ${OPENCV_INCLUDE_DIR}
-
+${CERES_INCLUDE_DIRS}
+${Boost_INCLUDE_DIRS}
 )
 
 LIST(APPEND LINK_LIBS
@@ -45,5 +48,5 @@ add_library(camera_model SHARED
 
 target_link_libraries(camera_model ${Boost_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES})
 ADD_EXECUTABLE(data_gen main/gener_alldata.cpp src/param.h src/param.cpp src/utilities.h src/utilities.cpp src/imu.h src/imu.cpp)
-TARGET_LINK_LIBRARIES (data_gen ${LINK_LIBS}　camera_model)
+TARGET_LINK_LIBRARIES (data_gen camera_model ${LINK_LIBS})
 

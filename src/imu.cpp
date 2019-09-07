@@ -183,8 +183,6 @@ void IMU::testImu(std::string src, std::string dist)
 
     }
 
-    std::cout<<"test　end"<<std::endl;
-
 }
 //读取生成的imu数据并用imu动力学模型使用中值积分对数据进行计算，最后保存imu积分以后的轨迹，
 //用来验证数据以及模型的有效性。
@@ -254,7 +252,4 @@ void IMU::testImuMidPoint(std::string src, std::string dist)
                    <<std::endl;
 
     }
-
-    std::cout<<"test　end"<<std::endl;
-
 }

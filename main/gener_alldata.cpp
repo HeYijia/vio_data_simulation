@@ -7,7 +7,8 @@
 #include "../src/imu.h"
 #include "../src/utilities.h"
 #include "camodocal/camera_models/CameraFactory.h"
-std::string config_file = "config/sim_config.yaml";
+std::string config_file = "../config/sim_config.yaml";
+Param param;
 std::vector < std::pair< Eigen::Vector4d, Eigen::Vector4d > >
 CreatePointsLines(std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> >& points)
 {
@@ -76,7 +77,13 @@ CreatePointsLines(std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::V
     save_points(filename.str(),points);
     return lines;
 }
-
+void addCamNoise(Eigen::Vector2d &obs){
+    std::random_device rd;
+    std::default_random_engine generator_(rd());
+    std::normal_distribution<double> noise(0.0, 1.0);
+    Eigen::Vector2d noise_pixel(noise(generator_),noise(generator_));
+    obs += param.pixel_noise * noise_pixel;
+}
 int main(){
 
 //    Eigen::Quaterniond Qwb;
@@ -104,7 +111,7 @@ int main(){
     // IMU model
     Param params;
     IMU imuGen(params);
-    auto m_camera = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(config_file);
+    camodocal::CameraPtr m_camera = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(config_file);
     // create imu data
     // imu pose gyro acc
     std::vector< MotionData > imudata;
@@ -161,6 +168,7 @@ int main(){
         // 遍历所有的特征点，看哪些特征点在视野里
         std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points_cam;    // ３维点在当前cam视野里
         std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > features_cam;  // 对应的２维图像坐标
+        std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > pixels_cam;  // 对应的２维图像坐标
         for (int i = 0; i < points.size(); ++i) {
             Eigen::Vector4d pw = points[i];          // 最后一位存着feature id
             pw[3] = 1;                               //改成齐次坐标最后一位
@@ -174,6 +182,10 @@ int main(){
             {
                 points_cam.push_back(points[i]);
                 features_cam.push_back(obs);
+                Eigen::Vector2d obs_pixels;
+                m_camera->undistToPlane(obs, obs_pixels);
+                addCamNoise(obs_pixels);
+                pixels_cam.push_back(obs_pixels);
             }
         }
         if(n == 0)
@@ -184,8 +196,11 @@ int main(){
         }
         // save points
         std::stringstream filename1;
+        std::stringstream filename2;
         filename1<<"keyframe/all_points_"<<n<<".txt";
+        filename2<<"keyframe/pixel_all_points_"<<n<<".txt";
         save_features(filename1.str(),points_cam,features_cam, camdata[n].timestamp);
+        save_features(filename2.str(),points_cam,pixels_cam, camdata[n].timestamp);
 //        save_features(filename1.str(),points_cam,features_cam);
     }
 

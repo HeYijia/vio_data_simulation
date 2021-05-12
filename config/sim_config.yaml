@@ -1,11 +1,17 @@
 %YAML:1.0
+#time
+imu_frequency: 50
+cam_frequency: 30
+wheel_frequency: 50
+t_start: 0
+t_end: 20  #  20 s
 
 #common parameters
 imu_topic: "/imu0"
 image_topic: "/cam0/image_raw"
 output_path: "/home/wang/CLionProjects/VIO/c7/vins_sys_code/bin"
 
-#camera calibration 
+#camera calibration
 model_type: PINHOLE
 camera_name: camera
 image_width: 640
@@ -21,117 +27,60 @@ projection_parameters:
    cx: 255
    cy: 255
 
-# Extrinsic parameter between IMU and Camera.
-estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
-                        # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
-                        # 2  Don't know anything about extrinsic parameters. You don't need to give R,T. We will try to calibrate it. Do some rotation movement at beginning.                        
-#If you choose 0 or 1, you should write down the following matrix.
-#Rotation from camera frame to imu frame, imu^R_cam
-extrinsicRotation: !!opencv-matrix
+body_R_cam: !!opencv-matrix
    rows: 3
    cols: 3
    dt: d
    data: [0, 0, -1,
-           -1, 0, 0,
-           0, 1, 0]
+          -1, 0, 0,
+          0, 1, 0]
 #Translation from camera frame to imu frame, imu^T_cam
-extrinsicTranslation: !!opencv-matrix
+body_t_cam: !!opencv-matrix
    rows: 3
    cols: 1
    dt: d
    data: [0.05,0.04, 0.03]
 
-#feature traker paprameters
-max_cnt: 36            # max feature number in feature tracking
-min_dist: 30            # min distance between two features 
-freq: 10                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image
-F_threshold: 1.0        # ransac threshold (pixel)
-show_track: 1           # publish tracking image as topic
-equalize: 1             # if image is too dark or light, trun on equalize to find enough features
-fisheye: 0              # if using fisheye, trun on it. A circle mask will be loaded to remove edge noisy points
+# Extrinsic parameter between IMU and wheel.
+body_R_wheel: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   #   data: [0, -1, 0,
+   #          0, 0, -1,
+   #          1, 0, 0]
+   data: [1, 0, 0,
+          0, 1, 0,
+          0, 0, 1]
+#Translation from camera frame to imu frame, imu^T_cam
+body_t_wheel: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [0.023, 0.730, -0.248]
+#   data: [-0.0208, 0.0290, -0.0168]
 
-#optimization parameters
-max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
-max_num_iterations: 8   # max solver itrations, to guarantee real time
-keyframe_parallax: 10.0 # keyframe selection threshold (pixel)
-
-#记得改回imu_pose_noise.txt
-##imu parameters       The more accurate parameters you provide, the better performance
-#acc_n: 0.019          # accelerometer measurement noise standard deviation. #0.2   0.04
-#gyr_n: 0.015         # gyroscope measurement noise standard deviation.     #0.05  0.004
-#acc_w: 0.0001         # accelerometer bias random work noise standard deviation.  #0.02
-#gyr_w: 1.0e-5       # gyroscope bias random work noise standard deviation.     #4.0e-5
-#g_norm: 9.81007     # gravity magnitude
-
-#记得改回imu_pose_noise.txt
 #imu parameters       The more accurate parameters you provide, the better performance
-acc_n: 0.2687          # accelerometer measurement noise standard deviation. #0.2   0.04
-gyr_n: 0.2121         # gyroscope measurement noise standard deviation.     #0.05  0.004
-acc_w: 7.071e-6         # accelerometer bias random work noise standard deviation.  #0.02
-gyr_w: 7.071e-7      # gyroscope bias random work noise standard deviation.     #4.0e-5
+acc_n: 0.019          # accelerometer measurement noise standard deviation. #0.2   0.04
+gyr_n: 0.015         # gyroscope measurement noise standard deviation.     #0.05  0.004
+acc_w: 0.0001         # accelerometer bias random work noise standard deviation.  #0.02
+gyr_w: 1.0e-5      # gyroscope bias random work noise standard deviation.     #4.0e-5
 g_norm: 9.81007     # gravity magnitude
+# rad/s
+wheel_gyro_noise_sigma: 0.015
+#　m/s
+wheel_velocity_noise_sigma: 0.015
+# wheel intrinsic
+sx: 1.2
+sy: 1.2
+sw: 1.2
 
-use_openmp_threads: 2  # the threads to use in openmp, if 0, will not use openmp
-verbose: 0 #是否详细输出
-stop_reason: 0 #是否输出每次迭代的停止原因
-stopThresholdGradient: 1e-3 # ||g|| < stopThresholdGradient
-#选择solver type (LM, DOGLEG)
-#solver_type: DOGLEG
-#solver_type: LM
-solver_type: 0 # 0:LM 1:DOGLEG 2:HYBRID
-
-#LM
-optimize_lm: 0 #是否运行优化的部分
-new_lm_update: 0 # The new lm update strategy
-show_lambda: 0 # 输出lambda变化过程
-
-#DOG_LEG
-hdl_choose: 0 #是否输出hdl选择过程
-radius_chi_g_output: 0 #是否输出dog-leg优化过程中的radius, chi,g
-
-jacobian_scaling: 0 #是否进行jacobian_scaling
-DTD_scaling: 0 #是否将H+λI改成H+λDTD
-
-## /16
-##记得改回imu_pose_noise.txt
-##imu parameters       The more accurate parameters you provide, the better performance
-#acc_n: 0.0011875          # accelerometer measurement noise standard deviation. #0.2   0.04
-#gyr_n: 0.0009375         # gyroscope measurement noise standard deviation.     #0.05  0.004
-#acc_w: 6.25e-6         # accelerometer bias random work noise standard deviation.  #0.02
-#gyr_w: 6.25e-7       # gyroscope bias random work noise standard deviation.     #4.0e-5
-#g_norm: 9.81007     # gravity magnitude
-
-## /32
-##记得改回imu_pose_noise.txt
-##imu parameters       The more accurate parameters you provide, the better performance
-#acc_n: 0.00059375          # accelerometer measurement noise standard deviation. #0.2   0.04
-#gyr_n: 0.00046875         # gyroscope measurement noise standard deviation.     #0.05  0.004
-#acc_w: 3.125e-6         # accelerometer bias random work noise standard deviation.  #0.02
-#gyr_w: 3.125e-7       # gyroscope bias random work noise standard deviation.     #4.0e-5
-#g_norm: 9.81007     # gravity magnitude
-
-##imu parameters       The more accurate parameters you provide, the better performance
-#acc_n: 0          # accelerometer measurement noise standard deviation. #0.2   0.04
-#gyr_n: 0         # gyroscope measurement noise standard deviation.     #0.05  0.004
-#acc_w: 0.0001         # accelerometer bias random work noise standard deviation.  #0.02
-#gyr_w: 0.0001       # gyroscope bias random work noise standard deviation.     #4.0e-5
-#g_norm: 9.81007     # gravity magnitude
-
-#loop closure parameters
-loop_closure: 0                    # start loop closure
-load_previous_pose_graph: 0        # load and reuse previous pose graph; load from 'pose_graph_save_path'
-fast_relocalization: 0             # useful in real-time and large project
-pose_graph_save_path: "/home/hyj/slam_course_vins/" # save and load path
+pixel_noise: 1.5              # 1 pixel noise
 
 #unsynchronization parameters
 estimate_td: 0                      # online estimate time offset between camera and imu
 td: 0.0                             # initial value of time offset. unit: s. readed image clock + td = real image clock (IMU clock)
 
-#rolling shutter parameters
-rolling_shutter: 0                  # 0: global shutter camera, 1: rolling shutter camera
-rolling_shutter_tr: 0               # unit: s. rolling shutter read out time per frame (from data sheet). 
-
-#visualization parameters
-save_image: 0                   # save image in pose graph for visualization prupose; you can close this function by setting 0 
-visualize_imu_forward: 0        # output imu forward propogation to achieve low latency and high frequence results
-visualize_camera_size: 0.4      # size of camera marker in RVIZ
+#unsynchronization parameters
+estimate_td_wheel: 0                      # online estimate time offset between camera and wheel
+td_wheel: 0.0                            # initial value of time offset. unit: s. readed image clock + td = real image clock (IMU clock)

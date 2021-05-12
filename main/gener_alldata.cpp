@@ -9,7 +9,7 @@
 #include "camodocal/camera_models/CameraFactory.h"
 
 std::string config_file = "../config/sim_config.yaml";
-Param param;
+Param params;
 
 using Point = Eigen::Vector4d;
 using Points = std::vector<Point, Eigen::aligned_allocator<Point> >;
@@ -82,8 +82,9 @@ void addCamNoise(Eigen::Vector2d &obs){
     std::default_random_engine generator_(rd());
     std::normal_distribution<double> noise(0.0, 1.0);
     Eigen::Vector2d noise_pixel(noise(generator_),noise(generator_));
-    obs += param.pixel_noise * noise_pixel;
+    obs += params.pixel_noise * noise_pixel;
 }
+
 int main(){
 
     // Eigen::Quaterniond Qwb;
@@ -110,7 +111,7 @@ int main(){
     CreatePointsLines(points, lines);
 
     // IMU model
-    Param params;
+    params.readParameters(config_file);
     IMU imuGen(params);
     camodocal::CameraPtr m_camera = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(config_file);
     // create imu data
@@ -145,12 +146,13 @@ int main(){
     for (float t = params.t_start; t<params.t_end;) {
 
         MotionData imu = imuGen.MotionModel(t);   // imu body frame to world frame motion
+        imudata_correspond_cam.push_back(imu);
+
         MotionData cam;
 
         cam.timestamp = imu.timestamp;
         cam.Rwb = imu.Rwb * params.R_bc;    // cam frame in world frame
         cam.twb = imu.twb + imu.Rwb * params.t_bc; //  Tcw = Twb * Tbc ,  t = Rwb * tbc + twb
-        imudata_correspond_cam.push_back(imu);
         camdata.push_back(cam);
         t += 1.0/params.cam_frequency;
     }
@@ -169,6 +171,7 @@ int main(){
         std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > points_cam;    // ３维点在当前cam视野里
         std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > features_cam;  // 对应的归一化平面坐标
         std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > pixels_cam;  // 对应的像素平面坐标
+        std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > pixels_noise_cam;  //带噪声的像素平面坐标
         for (int i = 0; i < points.size(); ++i) {
             Eigen::Vector4d pw = points[i];          // 最后一位存着feature id
             pw[3] = 1;                               //改成齐次坐标最后一位
@@ -184,18 +187,22 @@ int main(){
                 features_cam.push_back(obs);
                 Eigen::Vector2d obs_pixels;
                 m_camera->undistToPlane(obs, obs_pixels);
-                addCamNoise(obs_pixels);
                 pixels_cam.push_back(obs_pixels);
+                Eigen::Vector2d obs_pixels_noise = obs_pixels;
+                addCamNoise(obs_pixels_noise);
+                pixels_noise_cam.push_back(obs_pixels_noise);
             }
         }
         // save points
         std::stringstream filename1;
         std::stringstream filename2;
+        std::stringstream filename3;
         filename1<<"keyframe/all_points_"<<n<<".txt";
         filename2<<"keyframe/pixel_all_points_"<<n<<".txt";
+        filename3<<"keyframe/pixel_noise_all_points_"<<n<<".txt";
         save_features(filename1.str(),points_cam,features_cam, camdata[n].timestamp);
         save_features(filename2.str(),points_cam,pixels_cam, camdata[n].timestamp);
-//        save_features(filename1.str(),points_cam,features_cam);
+        save_features(filename3.str(),points_cam,pixels_noise_cam, camdata[n].timestamp);
     }
 
     // lines obs in image

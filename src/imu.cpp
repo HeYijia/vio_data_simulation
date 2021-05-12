@@ -2,6 +2,7 @@
 // Created by hyj on 18-1-19.
 //
 
+#include <random>
 #include "imu.h"
 #include "utilities.h"
 
@@ -96,13 +97,14 @@ void IMU::testImu(std::string src, std::string dist)
         dq.x() = dtheta_half.x();
         dq.y() = dtheta_half.y();
         dq.z() = dtheta_half.z();
-
+        dq.normalize();
+        
         /// imu 动力学模型 欧拉积分
         Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gw;  // aw = Rwb * ( acc_body - acc_bias ) + gw
         Qwb = Qwb * dq;
-        Vw = Vw + acc_w * dt;
         Pwb = Pwb + Vw * dt + 0.5 * dt * dt * acc_w;
-
+        Vw = Vw + acc_w * dt;
+        
         /// 中值积分
 //        Eigen::Vector3d acc_w = Qwb * (imupose.imu_acc) + gw;  // aw = Rwb * ( acc_body - acc_bias ) + gw
 //        Qwb = Qwb * dq;

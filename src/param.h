@@ -24,12 +24,12 @@ public:
     double t_start = 0.;
     double t_end = 20;  //  20 s
 
-    // noise
+    // imu noise
     double gyro_bias_sigma = 1.0e-5;
     double acc_bias_sigma = 0.0001;
-
     double gyro_noise_sigma = 0.015;    // rad/s * 1/sqrt(hz)
     double acc_noise_sigma = 0.019;      //　m/(s^2) * 1/sqrt(hz)
+    // wheel noise
     double wheel_gyro_noise_sigma = 0.015;    // rad/s
     double wheel_velocity_noise_sigma = 0.019;      //　m/(s^2)
     double sx = 1.0;
@@ -38,6 +38,7 @@ public:
     Eigen::Matrix3d sv_inv;
     double sw = 1.0;
     double sw_inv = 1.0;
+    // pixel noise
     double pixel_noise = 1.5;              // 1 pixel noise
 
     //time delay
